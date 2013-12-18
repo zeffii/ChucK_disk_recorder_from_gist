@@ -11,3 +11,6 @@ this repository will host a python based server application that
 
 - The Chuck-plugin for SublimeText3 can upload multi-file gist of the current project (or you can do it manually, like a sap) 
 - with this gist point a browser at   your_server/CW&gist_id&length(ms)
+
+http://packages.debian.org/squeeze/flac
+
