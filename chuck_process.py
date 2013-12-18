@@ -29,9 +29,8 @@ def get_dir_name(destination_tmpfile):
             if tarinfo.isreg():
                 # strip off the directory info
                 file_found = os.path.split(tarinfo.name)[-1]
-
-                # store in foun_files, for print later.
                 take(file_found)
+
                 if file_found == "initialize.ck":
                     has_initialize_file = True
 
@@ -96,7 +95,7 @@ def take_input(dl_url, wav_name, length, max_amp):
 
     print("> " +  " ".join(chuck_init_wav) + "\n")
 
-    th = Ck_DiskWriter_Thread(tar_directory, chuck_init_wav)
+    th = Ck_DiskWriter_Thread(tar_directory, chuck_init_wav, destination_tmpfile)
     th.start()
 
     # restore original directory
@@ -104,9 +103,11 @@ def take_input(dl_url, wav_name, length, max_amp):
 
 
 class Ck_DiskWriter_Thread(threading.Thread):
-    def __init__(self, cwd, chuck_init_wav):
+
+    def __init__(self, cwd, chuck_init_wav, destination_tmpfile):
         self.chuck_init_wav = chuck_init_wav
         self.cwd = cwd
+        self.destination_tmpfile = destination_tmpfile
         threading.Thread.__init__(self)
 
     def run(self):
@@ -118,6 +119,9 @@ class Ck_DiskWriter_Thread(threading.Thread):
                         shell=True).communicate()
 
         print("complete! ")
+        print("doing clean up.")
+        print("removing /tmp file:", self.destination_tmpfile)
+        print("deleting directory:", self.cwd)
 
 take_input("https://gist.github.com/zeffii/8021115", "demo_output", 20, 1.0)
 
