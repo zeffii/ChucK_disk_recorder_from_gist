@@ -12,10 +12,13 @@ from urllib.request import urlretrieve
 import tarfile
 import subprocess
 import threading
+import shutil
 
 #wav_writer_ck_path = "wav_writer_wgain.ck"
-# this would be the absolute path on the server.
+# this would be the absolute path on the server, and must use forward slashes (this is passed into chuck)
+# chuck expects forward slashes.. (don't ask...)
 wav_writer_ck_path = "C:/Users/dealga/Documents/GitHub/ChucK_disk_recorder_from_gist/wav_writer_wgain.ck"
+destination_directory = "C:/Users/dealga/Documents/GitHub/ChucK_disk_recorder_from_gist/output/"
 
 def get_dir_name(destination_tmpfile):
     found_dir_name = None
@@ -95,7 +98,9 @@ def take_input(dl_url, wav_name, length, max_amp):
 
     print("> " +  " ".join(chuck_init_wav) + "\n")
 
-    th = Ck_DiskWriter_Thread(tar_directory, chuck_init_wav, destination_tmpfile)
+    th = Ck_DiskWriter_Thread(
+        tar_directory, chuck_init_wav, destination_tmpfile, wav_name)
+
     th.start()
 
     # restore original directory
@@ -104,10 +109,11 @@ def take_input(dl_url, wav_name, length, max_amp):
 
 class Ck_DiskWriter_Thread(threading.Thread):
 
-    def __init__(self, cwd, chuck_init_wav, destination_tmpfile):
+    def __init__(self, cwd, chuck_init_wav, destination_tmpfile, wav_name):
         self.chuck_init_wav = chuck_init_wav
         self.cwd = cwd
         self.destination_tmpfile = destination_tmpfile
+        self.wav_name = wav_name
         threading.Thread.__init__(self)
 
     def run(self):
@@ -120,8 +126,21 @@ class Ck_DiskWriter_Thread(threading.Thread):
 
         print("complete! ")
         print("doing clean up.")
-        print("removing /tmp file:", self.destination_tmpfile)
-        print("deleting directory:", self.cwd)
+        self.perform_cleanup()
+
+    def perform_cleanup(self):    
+        wav_file_full_path = os.path.join(self.cwd, self.wav_name + ".wav")
+        print("moving:", wav_file_full_path )
+        shutil.copy(wav_file_full_path, destination_directory)
+
+        try:
+            print("removing /tmp file:", self.destination_tmpfile)
+            os.remove(self.destination_tmpfile)
+            print("deleting directory:", self.cwd)
+            shutil.rmtree(self.cwd)
+        except:
+            print("unable to remove tmp content")
+
 
 take_input("https://gist.github.com/zeffii/8021115", "demo_output", 20, 1.0)
 
