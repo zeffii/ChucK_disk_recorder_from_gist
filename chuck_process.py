@@ -91,7 +91,6 @@ def take_input(dl_url, wav_name, length, max_amp):
 
     # chuck somefile.ck wav_writer.ck:20:new_wavename
     cc = [wav_writer_ck_path, str(length), wav_name, str(max_amp)]
-
     record_commands = ":".join(cc)
     chuck_init_wav = ["chuck", "initialize.ck", record_commands, "-s"]
 
@@ -99,6 +98,9 @@ def take_input(dl_url, wav_name, length, max_amp):
 
     th = Ck_DiskWriter_Thread(tar_directory, chuck_init_wav)
     th.start()
+
+    # restore original directory
+    os.chdir(old_dir)
 
 
 class Ck_DiskWriter_Thread(threading.Thread):
