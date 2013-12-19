@@ -14,11 +14,8 @@ import subprocess
 import threading
 import shutil
 
-#wav_writer_ck_path = "wav_writer_wgain.ck"
-# this would be the absolute path on the server, and must use forward slashes (this is passed into chuck)
-# chuck expects forward slashes.. (don't ask...)
-wav_writer_ck_path = "C:/Users/dealga/Documents/GitHub/ChucK_disk_recorder_from_gist/wav_writer_wgain.ck"
-destination_directory = "C:/Users/dealga/Documents/GitHub/ChucK_disk_recorder_from_gist/output/"
+wav_writer_ck_path = "../wav_writer_wgain.ck"
+destination_directory = "/home/zeffii/public_html/output"
 
 def get_dir_name(destination_tmpfile):
     found_dir_name = None
@@ -51,9 +48,8 @@ def get_dir_name(destination_tmpfile):
 def download_tar(dl_url):
     dl_url = "https://gist.github.com/zeffii/8021115"
     gist_id = dl_url.split("/")[-1]
-    user_id = dl_url.split("/")[-2] 
+    # user_id = dl_url.split("/")[-2] 
     cwd = os.getcwd()
-
     tarname = gist_id + ".tar.gz"
     destination_tmpfile = os.path.join(cwd, "tmp", tarname)
 
@@ -71,6 +67,21 @@ def download_tar(dl_url):
         print("nothing to work with..")
 
     return
+
+
+def perform_cleanup(cwd, wav_name, destination_tmpfile):    
+    wav_file_full_path = os.path.join(cwd, wav_name + ".wav")
+
+    print("copying:", wav_file_full_path )
+    shutil.copy(wav_file_full_path, destination_directory)
+
+    try:
+        print("removing /tmp file:", destination_tmpfile)
+        os.remove(destination_tmpfile)
+        print("deleting directory:", cwd)
+        shutil.rmtree(cwd)
+    except:
+        print("unable to remove tmp content")
 
 
 def take_input(dl_url, wav_name, length, max_amp):
@@ -91,58 +102,33 @@ def take_input(dl_url, wav_name, length, max_amp):
     tar_directory = os.path.join(old_dir, dir_name)
     os.chdir(tar_directory)
 
-    # chuck somefile.ck wav_writer.ck:20:new_wavename
+    # chuck somefile.ck wav_writer_wgain.ck:20:new_wavename:1.0
     cc = [wav_writer_ck_path, str(length), wav_name, str(max_amp)]
     record_commands = ":".join(cc)
-    chuck_init_wav = ["chuck", "initialize.ck", record_commands, "-s"]
+    chuck_init = ["chuck", "initialize.ck", record_commands, "-s"]
+    full_command = " ".join(chuck_init)
 
-    print("> " +  " ".join(chuck_init_wav) + "\n")
+    print("> " +  full_command)
 
-    th = Ck_DiskWriter_Thread(
-        tar_directory, chuck_init_wav, destination_tmpfile, wav_name)
+    try:
+        sts = subprocess.Popen(full_command, shell=True).wait()
+    except:
+        print("--- error while writing to disk. ---")
+        os.chdir(old_dir)
+        return
 
-    th.start()
-
-    # restore original directory
-    os.chdir(old_dir)
-
-
-class Ck_DiskWriter_Thread(threading.Thread):
-
-    def __init__(self, cwd, chuck_init_wav, destination_tmpfile, wav_name):
-        self.chuck_init_wav = chuck_init_wav
-        self.cwd = cwd
-        self.destination_tmpfile = destination_tmpfile
-        self.wav_name = wav_name
-        threading.Thread.__init__(self)
-
-    def run(self):
-        print("processing: ", end=" ")
-        p = subprocess.Popen(self.chuck_init_wav, 
-                        cwd=self.cwd,
-                        stdout=subprocess.PIPE, 
-                        stderr=subprocess.STDOUT, 
-                        shell=True).communicate()
-
-        print("complete! ")
-        print("doing clean up.")
-        self.perform_cleanup()
-
-    def perform_cleanup(self):    
-        wav_file_full_path = os.path.join(self.cwd, self.wav_name + ".wav")
-        print("moving:", wav_file_full_path )
-        shutil.copy(wav_file_full_path, destination_directory)
-
-        try:
-            print("removing /tmp file:", self.destination_tmpfile)
-            os.remove(self.destination_tmpfile)
-            print("deleting directory:", self.cwd)
-            shutil.rmtree(self.cwd)
-        except:
-            print("unable to remove tmp content")
+    try:
+        perform_cleanup(tar_directory, wav_name, destination_tmpfile)
+    except:
+        print("--- error while performing cleaunp ---")
+    finally:
+        print("restoring original directory")
+        os.chdir(old_dir)
 
 
-take_input("https://gist.github.com/zeffii/8021115", "demo_output", 20, 1.0)
+
+
+take_input("https://gist.github.com/zeffii/8021115", "demo_output", 5, 1.0)
 
 # EOF
 
