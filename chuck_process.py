@@ -128,7 +128,7 @@ def take_input(dl_url, wav_name, length, max_amp):
 
 
 
-take_input("https://gist.github.com/zeffii/8021115", "demo_output", 5, 1.0)
+# take_input("https://gist.github.com/zeffii/8021115", "demo_output", 5, 1.0)
 
 # EOF
 
