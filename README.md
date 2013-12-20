@@ -5,7 +5,7 @@ this repository hosts a python based server application that
 - takes an incoming full gist link with parameters for length, name and gain
 - downloads the tar.gz into a temporary directory
 - looks for a compatible tar.gz (must contain a dir and initialize.ck)
-- if it's found gold, it extracts the content to it's own directory
+- if it's found gold, it extracts the content to its own directory
 - will record a .wav of given (length|name|volume) to disk
 - the wave is moved to the output directory
 - the tar and folder are deleted.
