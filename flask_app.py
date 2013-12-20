@@ -1,8 +1,10 @@
 from chuck_process import take_input
 from flask import Flask
+from flask import render_template
+
 app = Flask(__name__)
 
-link_str = """\n\nIf it worked, the output is here: http://www.thegibson.net/~zeffii/public_html/output/{0}.wav"""
+link_str = "http://www.thegibson.net/~zeffii/output/{0}.wav"
 
 
 @app.route('/encode/<path:path>', methods=['GET', 'POST'])
@@ -17,8 +19,12 @@ def encoder(path):
         time = params.get('time', 30)
         gain = params.get('gain', 1.0)
 
+        # show this anyway
+        render_template('rendering.html', thecontent=name)
+
         take_input(url, name, int(time), (int(gain)/100))
-        return "yes! " + str(params) + link_str.format(name)
+        return render_template('complete.html', link=link_str.format(name), name=name)
+        #return render_template('complete.html', link=name)
     except:
         return "try that again!"
 
