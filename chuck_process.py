@@ -11,8 +11,8 @@ from urllib.request import urlopen
 from urllib.request import urlretrieve
 import tarfile
 import subprocess
-import threading
 import shutil
+from json_writer import write_full_json
 
 wav_writer_ck_path = "../wav_writer_wgain.ck"
 destination_directory = "/home/zeffii/public_html/output"
@@ -117,6 +117,7 @@ def take_input(dl_url, wav_name, length, max_amp):
         os.chdir(old_dir)
         return
 
+
     try:
         perform_cleanup(tar_directory, wav_name, destination_tmpfile)
     except:
@@ -124,6 +125,7 @@ def take_input(dl_url, wav_name, length, max_amp):
     finally:
         print("restoring original directory")
         os.chdir(old_dir)
+        write_full_json(1, wav_name, "wav")
 
 
 

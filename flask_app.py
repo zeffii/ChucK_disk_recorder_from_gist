@@ -1,11 +1,15 @@
-from chuck_process import take_input
+from multiprocessing import Process
 from flask import Flask
 from flask import render_template
+from flask import url_for, redirect
+from flask import copy_current_request_context
+
+from chuck_process import take_input
+from json_writer import write_full_json
 
 app = Flask(__name__)
 
 link_str = "http://www.thegibson.net/~zeffii/output/{0}.wav"
-
 
 @app.route('/encode/<path:path>', methods=['GET', 'POST'])
 def encoder(path):
@@ -16,19 +20,27 @@ def encoder(path):
 
         url = params.get('url', "https://gist.github.com/zeffii/8021115")
         name = params.get('name', "demo_name")
-        time = params.get('time', 30)
-        gain = params.get('gain', 1.0)
+        time = int(params.get('time', 30))
+        gain = float(params.get('gain', 100.0))/100.0
 
-        # show this anyway
-        render_template('rendering.html', thecontent=name)
+        # # write status json, to say things are being processed.
+        write_full_json(0, name, "wav")
 
-        take_input(url, name, int(time), (int(gain)/100))
+        # # start event thread, for concurrency.
+        #p = Process(target=take_input, args=(url, name, time, gain))
+        #p.start()
+        #p.join()
+        take_input(url, name, time, gain)
+
+        # we are done, send it off and javascript will update the page
+        # when the status.json is is modified to finished = 1
+        #return redirect(url_for('static', filename='rendering_animation.html'))
         return render_template('complete.html', link=link_str.format(name), name=name)
-        #return render_template('complete.html', link=name)
+
     except:
         return "try that again!"
 
 
 if __name__ == '__main__':
-    #app.run(debug=True)
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', debug=True)
+

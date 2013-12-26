@@ -1,0 +1,131 @@
+<!doctype html>
+<head>
+  <script src="libs/d3.v3.min.js" charset="utf-8"></script>
+</head>
+
+<style type="text/css">
+  .link_label{
+    font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
+    fill: #D8D8D8;
+    font-size: 2.61753em;
+    text-align: center;
+  }
+</style>
+
+<body>
+<svg></svg>
+<script>
+d3.select("body").style("background-color", d3.rgb(88,83,76))
+
+var svg = d3.select("svg");
+var defs = svg.append("defs");
+var group1 = svg.append("g").classed("group1", true);
+
+group1.attr("transform", "translate(" + [37, 150] + ")")
+.style({'fill':  "none", stroke: "#aeaeae"})
+
+// helpers
+var line_len = 120;
+var posx = 40;
+var posy = 40;
+var offsety = 70;
+
+var line_style = {
+  "stroke-width": 30,
+  fill: "none",
+  stroke: "#55A7BB"
+};
+
+
+
+var equals_top = group1.append("line")
+.attr({
+  x1: posx,  y1: posy,
+  x2: posx+line_len,  y2: posy
+})
+.style(line_style)
+
+var equals_bottom = group1.append("line")
+.attr({
+  x1: posx,  y1: posy + offsety,
+  x2: posx+line_len,  y2: posy + offsety
+})
+.style(line_style)
+
+var bigger_than = group1.append("path")
+.attr("id", "fork")
+.attr({d: function(){
+  // three points
+  var px1 = posx+line_len;
+  var py1 = posy - offsety/2;
+    
+  var px3 = posx+line_len;
+  var py3 = posy + (1.5 * offsety);
+  
+  var px2 = px1 + offsety;
+  var py2 = (py1 + py3) / 2;
+  return "M"+ [px1, py1,px2, py2,px3, py3]
+}
+})
+.style(line_style)
+.style("stroke", "#06BEBE")
+
+var angle = 50;
+var count = 0;
+
+var data = {"finished": -1};
+var ready = false;
+
+d3.timer(function() {
+
+  if (!ready){
+
+    count++;
+
+    var tg = d3.select("#fork");
+    tg.attr("transform", function() {
+      var x_pos = Math.sin(count/Math.PI/8);
+      return "translate("+ [24 + x_pos*10, 0] + ")";
+    });
+
+    if (count % 100 === 0){
+      d3.json("status.json", function(json){ data = json; });
+      if (data.finished === 1) {
+        console.log("allright!")
+        draw_link(data);
+        ready = true;
+      }
+      if (data.finished === 0) console.log("no allright!")  
+    }
+
+  }
+
+
+});
+
+function draw_link(data){
+    
+	console.log(data);
+  var bp = d3.select(".group1")
+  .append("g")
+  .attr({ "transform": "translate(" + [317, 87] + ")" })
+  .append("a")
+      .attr({
+        "xlink:href": data.link,
+        "xlink:show": "new",
+        "cursor": "pointer"
+      })
+
+  bp.append("text")
+  .text(data.link_name)
+  .classed("link_label", true)
+    .attr({"x": 28, "y": 16})
+
+}
+
+
+console.log("does arrive here instantly.")
+
+/* EOF */
+</script>
+</body>
