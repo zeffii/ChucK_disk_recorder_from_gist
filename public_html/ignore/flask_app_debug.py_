@@ -1,0 +1,21 @@
+from flask import Flask
+from flask import render_template
+from flask import url_for, redirect
+
+app = Flask(__name__)
+
+@app.route('/debug/<path:path>', methods=['GET', 'POST'])
+def dencoder(path):
+
+    try:
+        # return render_template('rendering_animation.html')
+        #return "harrrrr" 
+        return redirect(url_for('static', filename='rendering_animation.html'))
+
+    except:
+        return "try that again!"
+
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0')
