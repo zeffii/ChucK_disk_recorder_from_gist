@@ -10,12 +10,24 @@ import json
 from urllib.request import urlopen
 from urllib.request import urlretrieve
 import tarfile
+import threading
 import subprocess
 import shutil
 from json_writer import write_full_json
 
 wav_writer_ck_path = "../wav_writer_wgain.ck"
 destination_directory = "/home/zeffii/public_html/output"
+
+class FileSize_Thread(threading.Thread):
+    def __init__(self, commands):
+        self.commands = commands
+        threading.Thread.__init__(self)
+
+    def run(self):
+        print("doing filesize check")
+        subprocess.Popen(self.commands)
+        print("ended filesize check")
+
 
 def get_dir_name(destination_tmpfile):
     found_dir_name = None
@@ -46,7 +58,7 @@ def get_dir_name(destination_tmpfile):
     return
 
 def download_tar(dl_url):
-    dl_url = "https://gist.github.com/zeffii/8021115"
+    #dl_url = "https://gist.github.com/zeffii/8021115"
     gist_id = dl_url.split("/")[-1]
     # user_id = dl_url.split("/")[-2] 
     cwd = os.getcwd()
@@ -84,6 +96,10 @@ def perform_cleanup(cwd, wav_name, destination_tmpfile):
         print("unable to remove tmp content")
 
 
+def calc_size(time, sampleRate, bits, channels):
+    return (time * sampleRate * bits * channels) / 8
+ 
+
 def take_input(dl_url, wav_name, length, max_amp):
     success = download_tar(dl_url)
     if not success:
@@ -101,6 +117,14 @@ def take_input(dl_url, wav_name, length, max_amp):
     old_dir = os.getcwd()
     tar_directory = os.path.join(old_dir, dir_name)
     os.chdir(tar_directory)
+
+    # start updater thread here. -------------
+    full_file_path = os.path.join(tar_directory, wav_name + ".wav")
+    estimated_size = calc_size(float(length), 44100, 16, 2)
+    file_tester_src = "/home/zeffii/public_html/file_size_tester.py"
+    commands = ["python3", file_tester_src, full_file_path, str(estimated_size), wav_name]
+    th = FileSize_Thread(commands)
+    th.start()
 
     # chuck somefile.ck wav_writer_wgain.ck:20:new_wavename:1.0
     cc = [wav_writer_ck_path, str(length), wav_name, str(max_amp)]
@@ -125,7 +149,7 @@ def take_input(dl_url, wav_name, length, max_amp):
     finally:
         print("restoring original directory")
         os.chdir(old_dir)
-        write_full_json(1, wav_name, "wav")
+        write_full_json(1, wav_name, "wav", 100)
 
 
 

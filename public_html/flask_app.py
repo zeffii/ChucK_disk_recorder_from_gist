@@ -25,8 +25,8 @@ def encoder(path):
         _time = int(params.get('time', 30))
         gain = float(params.get('gain', 100.0))/100.0
 
-        # # write status json, to say things are being processed.
-        write_full_json(0, name, "wav")
+        # initial write to the json to state it is not finished yet.
+        write_full_json(0, name, "wav", 0)
 
         # # start event thread, for concurrency.
         commands = ["python3", "process_input.py",  url, name, str(_time), str(gain)]
@@ -35,10 +35,10 @@ def encoder(path):
         print("starting thread")
         th = Ck_Thread(commands)
         th.start()
-        print("process started, returning flow")
 
-        # we are done, send it off and javascript will update the page
-        # when the status.json is is modified to finished = 1
+        # tell browser to render the progress indicator.
+        # javascript will update the page according to status.json
+        print("redirecting")
         return redirect(url_for('static', filename='rendering_animation.html'))
 
     except:

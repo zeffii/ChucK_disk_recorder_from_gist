@@ -36,8 +36,6 @@ var line_style = {
   stroke: "#55A7BB"
 };
 
-
-
 var equals_top = group1.append("line")
 .attr({
   x1: posx,  y1: posy,
@@ -76,6 +74,27 @@ var count = 0;
 var data = {"finished": -1};
 var ready = false;
 
+// just indicator ---------------------------------------
+var g2 = svg.append("g").classed("group2", true)
+.attr("transform", "translate(" + [76, 50] + ")")
+
+var pwidth = 400;
+
+// border
+g2.append("rect")
+.attr({height: 50, width: pwidth})
+.style({ stroke: "#dedede", 
+        "stroke-width": "0.8px",
+         fill: "none"})
+
+// indicator
+g2.append("rect").classed("progressor", true)
+.attr({height: 50, width: 0})
+.style({ stroke: "none", 
+        "stroke-width": "2px",
+         fill: "#BBBBBB"})
+
+
 d3.timer(function() {
 
   if (!ready){
@@ -88,18 +107,21 @@ d3.timer(function() {
       return "translate("+ [24 + x_pos*10, 0] + ")";
     });
 
-    if (count % 100 === 0){
+    if (count % 200 === 0){
       
       var src = 'status.json?nocache=' + (new Date()).getTime();
       d3.json(src, function(json){ data = json; });
       if (data.finished === 1) {
-        console.log("allright!")
+        console.log("allright!");
         draw_link(data);
         ready = true;
+        update_progressbar(100);
       }
       if (data.finished === 0) {
-        console.log(data)
-        console.log("no allright!")  
+        console.log(data.percent*100);
+        console.log(data);
+        console.log("no allright!");
+        update_progressbar(data.percent);
       }
     }
 
@@ -107,6 +129,15 @@ d3.timer(function() {
 
 
 });
+
+
+function update_progressbar(percent){
+  svg.selectAll("rect.progressor")
+  .transition()
+  .duration(900)
+  .attr("width", (percent/100)*pwidth)
+}
+
 
 function draw_link(data){
     
@@ -124,7 +155,7 @@ function draw_link(data){
   bp.append("text")
   .text(data.link_name)
   .classed("link_label", true)
-    .attr({"x": 28, "y": 16})
+    .attr({"x": 28, "y": 0})
 
 }
 
